@@ -1,0 +1,6 @@
+__pycache__
+venv
+db/__pycache__
+routers/__pycache__
+mana-coffe-0ce1bd3860d5.json
+.env
