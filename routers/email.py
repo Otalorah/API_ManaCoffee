@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from models import models
+from models import users
 
 from lib.utils import generate_code
 from lib.functions_smtp import send_email
@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/", response_model=dict, status_code=status.HTTP_200_OK)
-async def send_emails(email: models.EmailUser) -> dict:
+async def send_emails(email: users.EmailUser) -> dict:
 
     email = dict(email)["email"]
 
@@ -32,7 +32,7 @@ async def send_emails(email: models.EmailUser) -> dict:
 
 
 @router.post("/code", response_model=Token, status_code=status.HTTP_200_OK)
-async def verify_codes(user: models.CodeUser) -> Token:
+async def verify_codes(user: users.CodeUser) -> Token:
 
     user = dict(user)
     verify_code(email=user["email"], code=user["code"])
