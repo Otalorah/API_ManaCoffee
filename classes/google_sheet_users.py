@@ -7,12 +7,11 @@ load_dotenv()
 
 CREDENTIALS = getenv('GOOGLE')
 CREDENTIALS = loads(CREDENTIALS)
-# file_name = "mana-coffe-0ce1bd3860d5.json"
-DOCUMENT = "Usuarios ManaCoffe"
+DOCUMENT = "ManaCoffe"
 SHEET_NAME = "Usuarios"
 
 
-class GoogleSheet_users:
+class GoogleSheetUsers:
     def __init__(self):
         self.gc = gspread.service_account_from_dict(CREDENTIALS)
         # self.gc = gspread.service_account(filename=file_name)
@@ -24,7 +23,7 @@ class GoogleSheet_users:
 
     def get_data_by_email(self, email: str) -> bool | list:
 
-        cell = self.sheet.find(email)
+        cell = self.sheet.find(email, in_column=3)
 
         if not cell:
             return False
@@ -60,3 +59,6 @@ class GoogleSheet_users:
         row = cell.row
 
         self.sheet.update(range_name=f"{column}{row}", values=[[value]])
+
+    def get_admin_emails(self) -> list:
+        return self.sheet.col_values(8)[1:]
