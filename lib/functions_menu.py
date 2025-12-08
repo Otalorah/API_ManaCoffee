@@ -10,7 +10,7 @@ sheet = GoogleSheetMenu()
 def update_menu_sheet(items: List[ItemMenu]) -> int:
     num_items = len(items)
     sheet_data = [
-        [item.name, item.price, item.amount] 
+        [item.name, item.price] 
         for item in items
     ]
     sheet.write_menu(values=sheet_data, num_items=num_items)
@@ -20,7 +20,7 @@ def update_menu_sheet(items: List[ItemMenu]) -> int:
 def convert_to_dictionary(table: list[list]) -> list[dict]:
 
     menu = list()
-    columns_name = ["name", "price", "amount"]
+    columns_name = ["name", "price"]
 
     for row in table:
         item_dict = dict(zip(columns_name, row))
