@@ -2,19 +2,33 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
 from os import getenv
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 SENDGRID_API_KEY = getenv('SENDGRID_API_KEY')
 FROM_EMAIL = getenv('FROM_EMAIL', 'brokerviewes@gmail.com')
 
 class ServerSMTP:
-    def send_email(self, email: str, code: str):
+    def __init__(self, templates_path: str = None):
+        """
+        Inicializa el servidor SMTP con la ruta a las plantillas HTML
+        
+        Args:
+            templates_path: Ruta a la carpeta que contiene las plantillas HTML
+        """
+        if templates_path is None:
+            # Ruta por defecto: retrocede una carpeta y entra a templates/email
+            self.templates_path = Path(__file__).parent.parent / 'templates' / 'email'
+        else:
+            self.templates_path = Path(templates_path)
+    
+    def send_email_code(self, email: str, code: str):
         """
         Envía un email usando SendGrid API con HTML
         """
         try:
             # Construir el contenido HTML
-            html_content = self.build_html_template(code)
+            html_content = self._load_template('verification_code.html', code=code)
             
             message = Mail(
                 from_email=Email(FROM_EMAIL),
@@ -32,75 +46,52 @@ class ServerSMTP:
             print(f"❌ Error enviando email: {str(e)}")
             raise e
     
-    @staticmethod
-    def build_html_template(code: str) -> str:
+    def send_email_welcome(self, email: str, name: str):
         """
-        Construye una plantilla HTML profesional para el email
+        Envía un email de bienvenida usando SendGrid API con HTML
         """
-        html = f"""
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Código de Verificación</title>
-        </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
-                <tr>
-                    <td align="center">
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <!-- Header -->
-                            <tr>
-                                <td style="background: linear-gradient(135deg, #6F4E37 0%, #3E2723 100%); padding: 40px 20px; text-align: center;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px;">ManaCoffe</h1>
-                                </td>
-                            </tr>
-                            
-                            <!-- Body -->
-                            <tr>
-                                <td style="padding: 40px 30px;">
-                                    <h2 style="color: #333333; margin-top: 0; font-size: 24px;">Código de Verificación</h2>
-                                    <p style="color: #666666; font-size: 16px; line-height: 1.5;">
-                                        Hemos recibido una solicitud para verificar tu cuenta. Usa el siguiente código para continuar:
-                                    </p>
-                                    
-                                    <!-- Código -->
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
-                                        <tr>
-                                            <td align="center">
-                                                <div style="background-color: #FFF8E7; border: 2px dashed #6F4E37; border-radius: 8px; padding: 20px; display: inline-block;">
-                                                    <span style="font-size: 32px; font-weight: bold; color: #6F4E37; letter-spacing: 8px; font-family: 'Courier New', monospace;">
-                                                        {code}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                    
-                                    <p style="color: #666666; font-size: 14px; line-height: 1.5;">
-                                        Este código expirará en <strong>10 minutos</strong>.
-                                    </p>
-                                    
-                                    <p style="color: #999999; font-size: 13px; line-height: 1.5; margin-top: 30px;">
-                                        Si no solicitaste este código, puedes ignorar este mensaje de forma segura.
-                                    </p>
-                                </td>
-                            </tr>
-                            
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
-                                    <p style="color: #999999; font-size: 12px; margin: 0;">
-                                        © 2025 ManaCoffe. Todos los derechos reservados.
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
+        try:
+            # Construir el contenido HTML de bienvenida
+            html_content = self._load_template('welcome.html', name=name)
+            
+            message = Mail(
+                from_email=Email(FROM_EMAIL),
+                to_emails=To(email),
+                subject='¡Bienvenido a ManaCoffe!',
+                html_content=Content("text/html", html_content)
+            )
+            
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            response = sg.send(message)
+            
+            return response
+            
+        except Exception as e:
+            print(f"❌ Error enviando email de bienvenida: {str(e)}")
+            raise e
+    
+    def _load_template(self, template_name: str, **kwargs) -> str:
         """
-        return html
+        Carga una plantilla HTML desde un archivo y reemplaza las variables
+        
+        Args:
+            template_name: Nombre del archivo de plantilla
+            **kwargs: Variables a reemplazar en la plantilla
+            
+        Returns:
+            Contenido HTML con variables reemplazadas
+        """
+        template_path = self.templates_path / template_name
+        
+        if not template_path.exists():
+            raise FileNotFoundError(f"Plantilla no encontrada: {template_path}")
+        
+        with open(template_path, 'r', encoding='utf-8') as file:
+            html_content = file.read()
+        
+        # Reemplazar variables en la plantilla
+        for key, value in kwargs.items():
+            placeholder = f'{{{{{key}}}}}'
+            html_content = html_content.replace(placeholder, str(value))
+        
+        return html_content

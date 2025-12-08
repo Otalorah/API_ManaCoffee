@@ -1,8 +1,12 @@
 from classes.server_smtp import ServerSMTP
 
-def send_email(email: str, code: str):
+server = ServerSMTP()
+
+def send_email_code(email: str, code: str) -> None:
     """
     Envía un email con el código de verificación
-    """
-    server = ServerSMTP()
-    server.send_email(email=email, code=code)
+    """  
+    server.send_email_code(email=email, code=code)
+
+def send_email_welcome(email: str, name: str) -> None:
+    server.send_email_welcome(email=email, name=name)

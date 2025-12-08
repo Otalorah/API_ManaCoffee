@@ -5,6 +5,7 @@ from typing import Annotated
 
 from models import users, emails
 
+from lib.functions_smtp import send_email_welcome
 from lib.utils import transform_to_bool, exception
 from lib.auth import create_token_user, aut_user, verify_token
 from lib.functions_users import create_user_sheet, get_data_user, verify_password, update_password, verify_admin_email
@@ -19,9 +20,10 @@ def create_user(user: users.UserCreate) -> dict:
 
     name, email = create_user_sheet(user)
 
+    send_email_welcome(email=email, name=name)
     token = create_token_user(email=email)
 
-    return {"redirect": "/", "access_token": token}
+    return {"redirect": "/login", "access_token": token}
 
 # Login the user with database
 @router.post("/login", response_model=dict, status_code=status.HTTP_200_OK)
@@ -33,13 +35,13 @@ def login(data: emails.EmailPasswordLogin) -> dict:
     
     if not verify_password(email=data.email, password=data.password):
         raise exception("La contraseña no es correcta")
-    
-    token = create_token_user(email=data.email)
 
-    if verify_admin_email(email=data.email):
-        return {"redirect": "/admin", "access_token": token}
+    if not verify_admin_email(email=data.email):
+        raise exception("El administrador no está registrado")
+
+    token = create_token_user(email=data.email)
     
-    return {"redirect": "/", "access_token": token}
+    return {"redirect": "/admin", "access_token": token}
 
 # Get the User with a token
 @router.get("/", response_model=users.UserBase, status_code=status.HTTP_200_OK)

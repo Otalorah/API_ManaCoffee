@@ -30,7 +30,13 @@ def create_user_sheet(user: users.UserCreate) -> Tuple[str, str]:
     
     # Verificar si el usuario ya existe
     verify_user_exists(email)
-    
+
+    if not verify_admin_email(email):
+       raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='El usuario no está registrado'
+        )
+
     # Hashear la contraseña
     hashed_password = hash_password(user.password)
     user_dict['password'] = hashed_password
