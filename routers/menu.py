@@ -6,11 +6,6 @@ from lib.functions_menu import update_menu_sheet, get_menu_sheet
 
 router = APIRouter()
 
-# [
-#  {"name": "Laptop", "price": 1500},
-#  {"name": "Mouse", "price": 25}
-# ]
-
 @router.put("/update", response_model=MessageMenuCreated, status_code=status.HTTP_200_OK)
 async def update_menu(items: List[ItemMenu]) -> MessageMenuCreated:
 

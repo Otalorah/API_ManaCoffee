@@ -47,6 +47,7 @@ python-dotenv==1.0.1
 python-http-client==3.3.7
 python-jose==3.4.0
 python-multipart==0.0.18
+pytz==2025.2
 PyYAML==6.0.1
 requests==2.32.4
 requests-oauthlib==2.0.0

@@ -2,7 +2,7 @@
 # uvicorn main:app --reload
 
 from fastapi import FastAPI
-from routers import users, email, menu
+from routers import users, email, menu, reservation
 from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
@@ -22,6 +22,7 @@ app.add_middleware(
 app.include_router(users.router, prefix="/user", tags=["user"])
 app.include_router(email.router, prefix="/email", tags=["email"])
 app.include_router(menu.router, prefix="/menu", tags=["menu"])
+app.include_router(reservation.router, prefix="/reservation", tags=["reservation"])
 
 
 @app.get("/")

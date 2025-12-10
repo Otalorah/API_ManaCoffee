@@ -14,7 +14,6 @@ SHEET_NAME = "Menu"
 class GoogleSheetMenu:
     def __init__(self):
         self.gc = gspread.service_account_from_dict(CREDENTIALS)
-        # self.gc = gspread.service_account(filename=file_name)
         self.sh = self.gc.open(DOCUMENT)
         self.sheet = self.sh.worksheet(SHEET_NAME)
 
